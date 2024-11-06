@@ -1,14 +1,14 @@
 import gplay from 'google-play-scraper';
 
 const BATCH_SIZE = 150; // Maximum reviews per page with pagination
-const DEFAULT_DAYS = 3; // Default days to fetch if no startTime is provided
+const DEFAULT_DAYS = 1; // Default days to fetch if no startTime is provided
 
 // Helper function to check if a review date is newer than the specified start time
 const isNewerThan = (date, startTime) => {
     return date > startTime;
 };
 
-// Function to fetch reviews newer than a given time, or default to last three days if no time provided
+// Function to fetch reviews newer than a given time, or default to last two days if no time provided
 const fetchReviewsSince = async (appId, startTime = null) => {
     const now = new Date();
     const start = startTime ? new Date(startTime) : new Date(now.setDate(now.getDate() - DEFAULT_DAYS));

@@ -1,10 +1,6 @@
-import scrapeReviews from './scrapeReviews.js'
-import { addReviews } from './services/reviewService.js';
+import cron from 'node-cron';
+import task from './task.js';
 
-const temp = async () => {
-    const reviews = await scrapeReviews();
+cron.schedule('17 03 * * *', task);
 
-    await addReviews(reviews);
-}
-
-temp();
+console.log("Daily review categorization and saving task scheduled.");

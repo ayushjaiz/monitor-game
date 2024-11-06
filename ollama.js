@@ -1,46 +1,123 @@
 import ollama from 'ollama';
 
-let modelResponse = "";
+const reviews = [
+    "This app is good",
+    "This app has glitches",
+    "I love the new update!",
+    "The app crashes every time I open it.",
+    "Great app, very user-friendly.",
+    "The app is slow and lags a lot.",
+    "I experienced a bug in the payment section.",
+    "Amazing app! Very useful.",
+    "Terrible experience, keeps freezing.",
+    "Excellent performance on my device.",
+    "The app drains my battery too quickly.",
+    "So many bugs, it's unusable!",
+    "Fantastic app, very responsive.",
+    "The app won’t load past the splash screen.",
+    "Good customer support, helped me solve my issue.",
+    "The UI is confusing and hard to navigate.",
+    "No crashes, smooth experience overall.",
+    "The app randomly logs me out.",
+    "Perfect for what I need, very intuitive.",
+    "Keeps giving me error messages when I try to log in.",
+    "This app is good",
+    "This app has glitches",
+    "I love the new update!",
+    "The app crashes every time I open it.",
+    "Great app, very user-friendly.",
+    "The app is slow and lags a lot.",
+    "I experienced a bug in the payment section.",
+    "Amazing app! Very useful.",
+    "Terrible experience, keeps freezing.",
+    "Excellent performance on my device.",
+    "The app drains my battery too quickly.",
+    "So many bugs, it's unusable!",
+    "Fantastic app, very responsive.",
+    "The app won’t load past the splash screen.",
+    "Good customer support, helped me solve my issue.",
+    "The UI is confusing and hard to navigate.",
+    "No crashes, smooth experience overall.",
+    "The app randomly logs me out.",
+    "Perfect for what I need, very intuitive.",
+    "Keeps giving me error messages when I try to log in.",
+    "Great app, very user-friendly.",
+    "The app is slow and lags a lot.",
+    "I experienced a bug in the payment section.",
+    "Amazing app! Very useful.",
+    "Terrible experience, keeps freezing.",
+    "Excellent performance on my device.",
+    "The app drains my battery too quickly.",
+    "So many bugs, it's unusable!",
+    "Fantastic app, very responsive.",
+    "The app won’t load past the splash screen.",
+    "Good customer support, helped me solve my issue.",
+    "The UI is confusing and hard to navigate.",
+    "No crashes, smooth experience overall.",
+    "The app randomly logs me out.",
+    "Perfect for what I need, very intuitive.",
+    "Keeps giving me error messages when I try to log in."
+];
 
-const prompt = `Classify this review into one of the following five categories: 
-- Complaints, Crashes, Bugs, Praises, Others
+const categories = ["COMPLAINTS", "CRASHES", "BUGS", "PRAISES", "OTHERS"];
+const batchSize = 8; // Process 20 reviews at a time
+let modelResponses = [];
 
-Review: "I liked this app."
-
-Respond with only the single - word category that best fits.`;
-
-let chatConfig = {
-    model: "llama3.2:1b",
-    role: "user",
-    content: prompt,
+const chatConfig = {
+    model: "gemma2:2b",
+    role: "user"
 };
 
-// Check for chat content argument, otherwise use default prompt above
-if (process.argv[2] && process.argv[2].length >= 2) {
-    chatConfig.content = process.argv[2];
-}
+// Function to process a batch of reviews
+async function invokeLLMBatch(reviewsBatch) {
+    const prompt = {
+        role: "user",
+        content: `Classify each review into one of the following categories: ${categories.join(", ")}
 
-async function invokeLLM(props) {
-    console.log(`-----`);
-    console.log(`[${props.model}]: ${props.content}`);
-    console.log(`-----`);
+        Reviews: ["This app is good",
+        "This app has glitches",
+        "I love the new update!",
+        "The app crashes every time I open it.",
+        "Great app, very user-friendly.",
+        "The app is slow and lags a lot.",
+        "I experienced a bug in the payment section.",
+        "Amazing app! Very useful.",
+        "Terrible experience, keeps freezing.",
+        "Excellent performance on my device.",
+        "The app drains my battery too quickly.",
+        "So many bugs, it's unusable!",
+        "Fantastic app, very responsive.",
+        "The app won’t load past the splash screen."],
+
+        Respond with only the single-word category for each review, in order, separated by commas.`
+    };
+
     try {
-        console.log(`Running prompt...`);
-        const response = await ollama.chat({
-            model: props.model,
-            messages: [{ role: props.role, content: props.content }],
-        });
-        console.log(`${response.message.content}\n`);
-        modelResponse = response.message.content;
+        console.log(`Processing batch of ${reviewsBatch.length} reviews...`);
+        const response = await ollama.chat({ model: chatConfig.model, messages: [prompt] });
+
+        // Split the response by commas and add to modelResponses
+        const classifications = response.message.content.trim().split(",");
+        modelResponses.push(...classifications.map(item => item.trim()));
     } catch (error) {
-        console.log(`Query failed!`);
-        console.log(error);
+        console.error("Batch processing failed!", error);
     }
 }
 
-// Execute the loop
 (async () => {
-    for (let i = 0; i < 10; i++) {
-        await invokeLLM(chatConfig);  // Awaiting each iteration for sequential execution
+    console.log(`Total reviews: ${reviews.length}`);
+
+    // Process reviews in batches of 10
+    for (let i = 0; i < reviews.length; i += batchSize) {
+        const batch = reviews.slice(i, i + batchSize);
+        await invokeLLMBatch(batch);
     }
+
+    console.log("All responses:", modelResponses);
 })();
+
+
+(async () => {
+    await invokeLLMBatch();
+})();
+
